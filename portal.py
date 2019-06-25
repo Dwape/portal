@@ -1,6 +1,7 @@
 import sys
 import requests
 from pyquery import PyQuery as pq
+from requests.models import Response
 from course import Course
 
 global session # Try to remove this global variable
@@ -68,7 +69,22 @@ def get_all_courses(page):
 	# courses.remove('')
 	return filter((lambda x: x.id != '[legajo]'), courses)
 
-# Should they be called subjects or courses?
+# User and password will be ignored.
+def fake_login(user, password):
+	response = Response()
+	response.code = 'ok'
+	response.status_code = 200  # Check if this code is correct
+	with open('main.html', 'r') as file:
+		response._content = file.read()
+	return response
+
+def fake_get_course_content(degree, unit, plan, course):
+	response = Response()
+	response.code = 'ok'
+	response.status_code = 200  # Check if this code is correct
+	with open('course.html', 'r') as file:
+		response._content = file.read()
+	return response
 
 page = login(sys.argv[1], sys.argv[2])
 
@@ -81,4 +97,3 @@ print(reduce((lambda x,y: x + y), map((lambda x: x.name + ' [' + x.id + ']\n'), 
 
 get_course_content(degree, unit, plan, 'AL1')
 
-#print(average)
