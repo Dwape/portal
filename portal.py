@@ -1,6 +1,7 @@
 import sys
 import requests
 from pyquery import PyQuery as pq
+from course import Course
 
 global session # Try to remove this global variable
 session = requests.Session()
@@ -11,6 +12,13 @@ def login(user, password):
 	payload = {'__RequestVerificationToken': token, 'TipoDeDocId': 'D', 'NroDoc': user, 'Clave': password, 'Recordarme':False}
 	cookies = session.cookies # We need to send the cookies
 	r = session.post('http://www.austral.edu.ar/portal/Cuenta/IniciarSesion', data=payload, cookies=cookies) # Do the cookies need to be added manually here?
+	
+	d = pq(r.text)
+	message = d('#status-message').find('span').text()
+	if(message != ""):
+		print(message)
+		raise ValueError('Error while trying to login')
+	
 	return r
 
 def get_verification_token():
@@ -43,23 +51,23 @@ def get_info(page):
 	return (degree, unit, plan)
 
 
-# We need to get the ids of all the courses
 def get_all_courses(page):
 	"""Returns an array with the ids of all the courses"""
 	# We could avoid looking for data from certain types of courses
+	# We could add a year to the courses but we would need to get them in another way.
 	d = pq(page.text)
 
-	results = d.find('a').filter(lambda i: pq(this).attr('data-url') != None)
+	# results = d.find('a').filter(lambda i: pq(this).attr('data-url') != None) # It gets you all the links from the course row so a lot of courses will be repeated
+	results = d('[class=" modalAction"]') # It gets you only the courses that you have a score.
 	courses = list()
 	for result in results:
+		query = pq(result)	
 		# This can probably be done with queries.
-		courses.append(pq(result).attr['data-url'].split('=')[-1])
+		courses.append(Course(query.attr['data-title'].split('=')[-1],query.attr['data-url'].split('=')[-1], list()))
 	courses = list(dict.fromkeys(courses))
-	courses.remove('')
-	courses.remove('[legajo]')
-	return courses
+	# courses.remove('')
+	return filter((lambda x: x.id != '[legajo]'), courses)
 
-# We need a way to get the ids of all the subjects
 # Should they be called subjects or courses?
 
 page = login(sys.argv[1], sys.argv[2])
@@ -68,7 +76,8 @@ degree, unit, plan = get_info(page)
 
 print(get_average(page))
 
-print(get_all_courses(page))
+courses = get_all_courses(page)
+print(reduce((lambda x,y: x + y), map((lambda x: x.name + ' [' + x.id + ']\n'), courses)))
 
 get_course_content(degree, unit, plan, 'AL1')
 
