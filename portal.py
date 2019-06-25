@@ -10,7 +10,7 @@ def login(user, password):
 	token = get_verification_token()
 	payload = {'__RequestVerificationToken': token, 'TipoDeDocId': 'D', 'NroDoc': user, 'Clave': password, 'Recordarme':False}
 	cookies = session.cookies # We need to send the cookies
-	r = session.post('http://www.austral.edu.ar/portal/Cuenta/IniciarSesion', data=payload, cookies=cookies)
+	r = session.post('http://www.austral.edu.ar/portal/Cuenta/IniciarSesion', data=payload, cookies=cookies) # Do the cookies need to be added manually here?
 	return r
 
 def get_verification_token():
@@ -18,17 +18,58 @@ def get_verification_token():
 	URL = 'http://www.austral.edu.ar/portal/'
 	r = session.get(url = URL)
 	d = pq(r.text)
+	# Is this token acutally needed?
 	return d('[name=__RequestVerificationToken]').attr['value'] # This token is sent in the form
 
-def get_average():
-	"""Finds the user's average"""
-	user = sys.argv[1]
-	password = sys.argv[2]
-	response = login(user, password)
-	d = pq(response.text)
+def get_average(page):
+	"""Finds the user's grade point average"""
+	d = pq(page.text)
 	return d('#lblPromedio').find('span').text()
 
+def get_course_content(degree, unit, plan, course):
+	"""Returns the content for the specified subject.
+	This data must be somehow parsed so that it becomes useful."""
+	payload = {'carreraId': degree, 'unidadId': unit, 'planId': plan, 'materiaId': course}
+	r = session.get(url = 'http://www.austral.edu.ar/portal/materias/notasmateria', params=payload)
+	# print(r.status_code) # Only for testing purposes, remove
+	# print(r.text) # Only for testing purposes, remove
 
-average = get_average()
+def get_info(page):
+	"""Information that is needed for other requests."""
+	d = pq(page.text)
+	degree = d('#selectedCarreraId').attr['value']
+	unit = d('#selectedUnidadId').attr['value']
+	plan = d('#selectedPlanId').attr['value']
+	return (degree, unit, plan)
 
-print(average)
+
+# We need to get the ids of all the courses
+def get_all_courses(page):
+	"""Returns an array with the ids of all the courses"""
+	# We could avoid looking for data from certain types of courses
+	d = pq(page.text)
+
+	results = d.find('a').filter(lambda i: pq(this).attr('data-url') != None)
+	courses = list()
+	for result in results:
+		# This can probably be done with queries.
+		courses.append(pq(result).attr['data-url'].split('=')[-1])
+	courses = list(dict.fromkeys(courses))
+	courses.remove('')
+	courses.remove('[legajo]')
+	return courses
+
+# We need a way to get the ids of all the subjects
+# Should they be called subjects or courses?
+
+page = login(sys.argv[1], sys.argv[2])
+
+degree, unit, plan = get_info(page)
+
+print(get_average(page))
+
+print(get_all_courses(page))
+
+get_course_content(degree, unit, plan, 'AL1')
+
+#print(average)
