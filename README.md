@@ -2,6 +2,8 @@
 
 A basic attempt at accessing data in Universidad Austral's portal.
 
+Inspired by https://github.com/matimiodosky/Portal
+
 ### Running
 
 This project uses pipenv to manage packages:
