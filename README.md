@@ -6,11 +6,15 @@ Inspired by https://github.com/matimiodosky/Portal
 
 ### Running
 
-This project uses pipenv to manage packages and pyquery to make the requests:
+This project uses pipenv to manage packages:
 
 [Installing pipenv](https://docs.pipenv.org/en/latest/install/#installing-pipenv)
 
-[Installing pyquery](https://pypi.org/project/pyquery/)
+Install dependencies by running:
+
+```shell
+pipenv install
+```
 
 Currently it only prints the "grade point average" for the user and the ids of all the courses by running the following command:
 
