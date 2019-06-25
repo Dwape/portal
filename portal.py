@@ -11,6 +11,13 @@ def login(user, password):
 	payload = {'__RequestVerificationToken': token, 'TipoDeDocId': 'D', 'NroDoc': user, 'Clave': password, 'Recordarme':False}
 	cookies = session.cookies # We need to send the cookies
 	r = session.post('http://www.austral.edu.ar/portal/Cuenta/IniciarSesion', data=payload, cookies=cookies) # Do the cookies need to be added manually here?
+	
+	d = pq(r.text)
+	message = d('#status-message').find('span').text()
+	if(message != ""):
+		print(message)
+		raise ValueError('Error while trying to login')
+	
 	return r
 
 def get_verification_token():
