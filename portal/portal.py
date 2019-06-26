@@ -74,7 +74,7 @@ def fake_login(user, password):
 	response = Response()
 	response.code = 'ok'
 	response.status_code = 200  # Check if this code is correct
-	with open('main.txt', 'r') as file:
+	with open('pages/main.txt', 'r') as file:
 		response._content = file.read()
 	return response
 
@@ -82,7 +82,7 @@ def fake_get_course_content(degree, unit, plan, course):
 	response = Response()
 	response.code = 'ok'
 	response.status_code = 200  # Check if this code is correct
-	with open('course.txt', 'r') as file:
+	with open('pages/course.txt', 'r') as file:
 		response._content = file.read()
 	return response
 
