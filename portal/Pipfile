@@ -8,6 +8,8 @@ verify_ssl = true
 [packages]
 requests = "*"
 pyquery = "*"
+sqlalchemy = "*"
+pymysql = "*"
 
 [requires]
 python_version = "2.7"

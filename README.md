@@ -21,3 +21,18 @@ Currently it only prints the "grade point average" for the user and the ids of a
 ```shell
 pipenv run python portal.py [dni] [password]
 ```
+
+**MySQL**  
+To run MySQL perform the following commands from the project directory
+```shell
+cd portal/docker_compose/
+docker-compose up
+```
+To shutdown the database run: 
+```shell
+docker-compose down
+```
+To reset the database run:
+```shell
+docker-compose down -v
+```
