@@ -1,5 +1,6 @@
 import sys
 import requests
+import urllib
 from pyquery import PyQuery as pq
 from requests.models import Response
 from course import Course, Exam
@@ -77,7 +78,8 @@ def get_all_courses(page):
 	for result in results:
 		query = pq(result)	
 		# This can probably be done with queries.
-		courses.append(Course(query.attr['data-title'].split('=')[-1],query.attr['data-url'].split('=')[-1], list()))
+		id = query.attr['data-url'].split('=')[-1]
+		courses.append(Course(query.attr['data-title'].split('=')[-1], urllib.unquote(id), list()))
 	courses = list(dict.fromkeys(courses))
 	# courses.remove('')
 	return list(filter((lambda x: x.id != '[legajo]'), courses))

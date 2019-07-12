@@ -1,0 +1,16 @@
+version: '3.3'
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    volumes:
+      - ./init.sql:/data/application/init.sql
+    environment:
+      MYSQL_ROOT_USER: 'root'
+      MYSQL_ROOT_PASSWORD: 'password'
+      MYSQL_DATABASE: 'portal_db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+    ports:
+      - '1234:3306'
+    
