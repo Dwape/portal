@@ -1,6 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, DateTime, String, ForeignKey, func, Float, Integer
 from sqlalchemy.orm import relationship, backref
+from functools import reduce
 
 Base = declarative_base()
 
@@ -10,11 +11,14 @@ class Course(Base):
     name = Column(String(255))
     exams = relationship("Exam", backref="course", cascade="all,delete")
 
-    def __init__(self, name, id, exams):
+    def __init__(self, name, id, exams = list()):
         self.name = name
         self.id = id
         self.exams = exams
         super(Course, self).__init__()
+
+    def to_string(self):
+        return self.name + " [" + self.id + "]\n" + (reduce((lambda x, y: x + '\n' + y), map((lambda x: '\t' + x.to_string()), self.exams)) if len(self.exams) > 0 else "")
 
 class Exam(Base):
     __tablename__ = 'exam'
@@ -22,15 +26,19 @@ class Exam(Base):
     name = Column(String(255))
     score = Column(Float)
     course_id = Column(String(255), ForeignKey('course.id'))
+    
     def __init__(self, name, score):
         self.name = name
         self.score = score
         super(Exam, self).__init__()
+    
+    def to_string(self):
+        return self.name + " " + self.score
 
 
 # Should be moved to another file
 from sqlalchemy import create_engine
-engine = create_engine('mysql://user:password@localhost:1234/portal_db')
+engine = create_engine('mysql+pymysql://user:password@localhost:1234/portal_db')
 
 from sqlalchemy.orm import sessionmaker
 Session = sessionmaker()
