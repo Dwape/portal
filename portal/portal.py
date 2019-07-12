@@ -2,7 +2,8 @@ import sys
 import requests
 from pyquery import PyQuery as pq
 from requests.models import Response
-from course import Course
+from course import Course, Exam
+from functools import reduce
 
 global session # Try to remove this global variable
 session = requests.Session()
@@ -35,13 +36,25 @@ def get_average(page):
 	d = pq(page.text)
 	return d('#lblPromedio').find('span').text()
 
-def get_course_content(degree, unit, plan, course):
+def get_course_content(degree, unit, plan, courseId):
 	"""Returns the content for the specified subject.
 	This data must be somehow parsed so that it becomes useful."""
-	payload = {'carreraId': degree, 'unidadId': unit, 'planId': plan, 'materiaId': course}
+	payload = {'carreraId': degree, 'unidadId': unit, 'planId': plan, 'materiaId': courseId}
 	r = session.get(url = 'http://www.austral.edu.ar/portal/materias/notasmateria', params=payload)
-	# print(r.status_code) # Only for testing purposes, remove
-	# print(r.text) # Only for testing purposes, remove
+	return r
+
+def get_course_exams(course, content):
+	"""Returns a new course with exams assigned"""
+	text = pq(content.text)
+	rows = text.find('tr')
+	exams = list()
+	for row in rows:
+		cells = pq(row).find('td')
+		if(cells.length > 3):
+			name = pq(cells[0]).text()
+			score = pq(cells[cells.length - 1]).text()
+			exams.append(Exam(name, score))
+	return Course(course.name, course.id, exams)
 
 def get_info(page):
 	"""Information that is needed for other requests."""
@@ -53,7 +66,7 @@ def get_info(page):
 
 
 def get_all_courses(page):
-	"""Returns an array with the ids of all the courses"""
+	"""Returns an array with all the courses"""
 	# We could avoid looking for data from certain types of courses
 	# We could add a year to the courses but we would need to get them in another way.
 	d = pq(page.text)
@@ -67,7 +80,7 @@ def get_all_courses(page):
 		courses.append(Course(query.attr['data-title'].split('=')[-1],query.attr['data-url'].split('=')[-1], list()))
 	courses = list(dict.fromkeys(courses))
 	# courses.remove('')
-	return filter((lambda x: x.id != '[legajo]'), courses)
+	return list(filter((lambda x: x.id != '[legajo]'), courses))
 
 # User and password will be ignored.
 def fake_login(user, password):
@@ -86,14 +99,12 @@ def fake_get_course_content(degree, unit, plan, course):
 		response._content = file.read()
 	return response
 
-page = login(sys.argv[1], sys.argv[2])
+def get_courses(username, password):
+	"""Returns all the courses with scores"""
+	page = login(username, password)
+	degree, unit, plan = get_info(page)
+	courses = get_all_courses(page)
+	return list(map((lambda x: get_course_exams(x, get_course_content(degree, unit, plan, x.id))), courses))
 
-degree, unit, plan = get_info(page)
-
-print(get_average(page))
-
-courses = get_all_courses(page)
-print(reduce((lambda x,y: x + y), map((lambda x: x.name + ' [' + x.id + ']\n'), courses)))
-
-get_course_content(degree, unit, plan, 'AL1')
-
+result = get_courses(sys.argv[1], sys.argv[2])
+print(reduce((lambda x,y: x + "\n\n" + y), map((lambda x: x.to_string()), result)))
