@@ -17,14 +17,14 @@ class Course(Base):
         self.exams = exams
         super(Course, self).__init__()
 
-    def to_string(self):
-        return self.name + " [" + self.id + "]\n" + (reduce((lambda x, y: x + '\n' + y), map((lambda x: '\t' + x.to_string()), self.exams)) if len(self.exams) > 0 else "")
+    def __str__(self):
+        return self.name + " [" + self.id + "]\n" + (reduce((lambda x, y: x + '\n' + y), map((lambda x: '\t' + x.__str__()), self.exams)) if len(self.exams) > 0 else "")
 
 class Exam(Base):
     __tablename__ = 'exam'
     id = Column(Integer, primary_key = True, autoincrement = True)
     name = Column(String(255))
-    score = Column(Float)
+    score = Column(String(255))
     course_id = Column(String(255), ForeignKey('course.id'))
     
     def __init__(self, name, score):
@@ -32,33 +32,25 @@ class Exam(Base):
         self.score = score
         super(Exam, self).__init__()
     
-    def to_string(self):
+    def __str__(self):
         return self.name + " " + self.score
 
 
-# Should be moved to another file
-from sqlalchemy import create_engine
-engine = create_engine('mysql+pymysql://user:password@localhost:1234/portal_db')
 
-from sqlalchemy.orm import sessionmaker
-Session = sessionmaker()
-Session.configure(bind=engine)
-Base.metadata.create_all(engine)
+# # Only for testing purposes
+# e = Exam("Final", 3)
+# e2 = Exam("Parcial", 10)
+# c = Course("Analisis", "AL1", [e,e2])
 
-# Only for testing purposes
-e = Exam("Final", 3)
-e2 = Exam("Parcial", 10)
-c = Course("Analisis", "AL1", [e,e2])
+# s = Session()
+# course = s.query(Course).filter_by(id = "AL1").first()
+# if(course is not None):
+#     # deletes all the exams
+#     s.delete(course) 
 
-s = Session()
-course = s.query(Course).filter_by(id = "AL1").first()
-if(course is not None):
-    # deletes all the exams
-    s.delete(course) 
-
-# Add all the exams
-s.add(c)
-s.commit()
-courses = s.query(Course).all()
-print(len(courses[0].exams))
+# # Add all the exams
+# s.add(c)
+# s.commit()
+# courses = s.query(Course).all()
+# print(len(courses[0].exams))
 

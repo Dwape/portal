@@ -108,5 +108,4 @@ def get_courses(username, password):
 	courses = get_all_courses(page)
 	return list(map((lambda x: get_course_exams(x, get_course_content(degree, unit, plan, x.id))), courses))
 
-result = get_courses(sys.argv[1], sys.argv[2])
-print(reduce((lambda x,y: x + "\n\n" + y), map((lambda x: x.to_string()), result)))
+# result = get_courses(sys.argv[1], sys.argv[2])
