@@ -4,13 +4,15 @@ from course import Base, Course, Exam
 import sys, sched, time, notifier
 
 def get_courses_db(session):
+    """Returns all the courses from the database"""
     return session.query(Course).all()
 
 def get_course_by_id(session, id):
+    """Searches the course with the corresponding id in the database and returns it"""
     return session.query(Course).filter_by(id = id).first()
 
 def connect_to_db():
-    # Should be moved to another file
+    """Connects to the mysql database and returns the session"""
     from sqlalchemy import create_engine
     engine = create_engine('mysql+pymysql://user:password@localhost:1234/portal_db')
 
@@ -21,28 +23,33 @@ def connect_to_db():
     
     return Session()
 
-def contains_course(courses, id):
-    for course in courses:
-        if(course.id == id): 
-            return (True, course)
-    return False
-
 def contains_exam(exams, newExam):
+    """Checks if the newExam is contained in the exams list.
+    Returns True and the exam contained in the list if it founds a match.
+    Returns False and None if it is not contained
+    """
     for exam in exams:
         if(exam.order == newExam.order): 
             return (True, exam)
     return (False, None)
 
 def add_new(entity, session):
+    """Adds a new course or exam to the database"""
     session.add(entity)
     session.commit()
 
 def update_exam(id, score, session):
+    """Updates the exam in the database"""
     exam = session.query(Exam).filter_by(id = id).first()
     exam.score = score
     session.commit()
 
 def compare_courses(new_courses, session):
+    """Compares the exams from the new courses with ones in the database.
+    If the exams don't exist or their score is outdated, they are updated in the database.
+    
+    Returns the exams updated.
+    """
     new_exams = list()
     for course in new_courses:
         old_course = get_course_by_id(session, course.id)
@@ -62,9 +69,14 @@ def compare_courses(new_courses, session):
     return new_exams
 
 def print_courses(courses):
+    """Prints courses or exams"""
     print(reduce((lambda x,y: x + "\n\n" + y), map((lambda x: x.__str__()), courses)) if len(courses) > 0 else "\U0001F55C searching")
 
 def schedule_task(scheduler, time, session):
+    """Get the new exams and sends them to the notifier. 
+    
+    It executes every x seconds.
+    """
     new_courses = get_courses(sys.argv[1], sys.argv[2])
     new_exams = compare_courses(new_courses, session)
     if (len(new_exams) > 1):
