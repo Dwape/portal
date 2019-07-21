@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, DateTime, String, ForeignKey, func, Float, Integer
+from sqlalchemy import Column, DateTime, String, ForeignKey, func, Integer, Unicode
 from sqlalchemy.orm import relationship, backref
 from functools import reduce
 
@@ -8,7 +8,7 @@ Base = declarative_base()
 class Course(Base):
     __tablename__ = 'course'
     id = Column(String(255), primary_key = True) # The length of the id could be shorter
-    name = Column(String(255))
+    name = Column(Unicode(length=255))
     exams = relationship("Exam", backref="course", cascade="all,delete")
 
     def __init__(self, name, id, exams = list()):
@@ -23,17 +23,19 @@ class Course(Base):
 class Exam(Base):
     __tablename__ = 'exam'
     id = Column(Integer, primary_key = True, autoincrement = True)
-    name = Column(String(255))
+    name = Column(Unicode(length=255))
+    order = Column(Integer)
     score = Column(String(255))
     course_id = Column(String(255), ForeignKey('course.id'))
     
-    def __init__(self, name, score):
+    def __init__(self, name, score, order):
         self.name = name
         self.score = score
+        self.order = order
         super(Exam, self).__init__()
     
     def __str__(self):
-        return self.name + " " + self.score
+        return self.name + " " + self.score + " (" + str(self.order) + ")"
 
 
 

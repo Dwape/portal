@@ -32,7 +32,7 @@ To shutdown the database run:
 ```shell
 docker-compose down
 ```
-To reset the database run:
+To reset and shutdown the database run:
 ```shell
 docker-compose down -v
 ```

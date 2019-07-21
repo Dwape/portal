@@ -47,14 +47,31 @@ def get_course_content(degree, unit, plan, courseId):
 def get_course_exams(course, content):
 	"""Returns a new course with exams assigned"""
 	text = pq(content.text)
-	rows = text.find('tr')
+	
 	exams = list()
+	
+	rows = text.find('tr')
+	i = 0
 	for row in rows:
 		cells = pq(row).find('td')
 		if(cells.length > 3):
-			name = pq(cells[0]).text()
+			name = urllib.unquote(pq(cells[0]).text())
 			score = pq(cells[cells.length - 1]).text()
-			exams.append(Exam(name, score))
+			exams.append(Exam(name, score, i))
+			i += 1
+
+	# tables = text.find('table')
+	# for table in tables:
+	# 	query_table = pq(table)
+	# 	group = query_table.find('th')[0].text
+	# 	rows = query_table.find('tr')
+	# 	for row in rows:
+	# 		cells = pq(row).find('td')
+	# 		if(cells.length > 3):
+	# 			name = urllib.unquote(pq(cells[0]).text())
+	# 			score = pq(cells[cells.length - 1]).text()
+	# 			exams.append(Exam(name, score, group))
+
 	return Course(course.name, course.id, exams)
 
 def get_info(page):

@@ -1,8 +1,7 @@
 from portal import get_courses
 from sqlalchemy.orm import sessionmaker
 from course import Base, Course, Exam
-import sys
-
+import sys, sched, time, notifier
 
 def get_courses_db(session):
     return session.query(Course).all()
@@ -28,9 +27,9 @@ def contains_course(courses, id):
             return (True, course)
     return False
 
-def contains_exam(exams, exam):
+def contains_exam(exams, newExam):
     for exam in exams:
-        if(exam.name == exam.name): 
+        if(exam.order == newExam.order): 
             return (True, exam)
     return (False, None)
 
@@ -60,17 +59,26 @@ def compare_courses(new_courses, session):
             elif(not result):
                 new_exams.append(exam)
                 add_new(exam, session)
-    print_courses(new_courses)
     return new_exams
 
 def print_courses(courses):
-    print(reduce((lambda x,y: x + "\n\n" + y), map((lambda x: x.__str__()), courses)) if len(courses) > 0 else "")
+    print(reduce((lambda x,y: x + "\n\n" + y), map((lambda x: x.__str__()), courses)) if len(courses) > 0 else "\U0001F55C searching")
+
+def schedule_task(scheduler, time, session):
+    new_courses = get_courses(sys.argv[1], sys.argv[2])
+    new_exams = compare_courses(new_courses, session)
+    if (len(new_exams) > 1):
+        notifier.send_notifications(new_exams)
+    elif (len(new_exams) > 0):
+        notifier.send_notification(new_exams[0])
+    print_courses(new_exams)
+    scheduler.enter(time, 1, schedule_task, (scheduler, time, session))
 
 def main():
     session = connect_to_db()
-    old_courses = get_courses_db(session)
-    new_courses = get_courses("40535824", "manchita1")
-    new_exams = compare_courses(new_courses, session)
+    s = sched.scheduler(time.time, time.sleep)
+    schedule_task(s, 10, session)
+    s.run()
 
 
 main()
